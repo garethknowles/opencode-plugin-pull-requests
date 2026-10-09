@@ -4,6 +4,7 @@ import { execFile } from "node:child_process";
 import { For, Show } from "solid-js";
 
 import { fetchTracked } from "./github.ts";
+import { parseOptions } from "./config.ts";
 import { refreshAndShow } from "./list.ts";
 import { defaultKind, promptFor, type PromptKind } from "./prompts.ts";
 import {
@@ -45,6 +46,7 @@ const summaryLine = (items: ReadonlyArray<TrackedPullRequest>): string => {
 export default Plugin.define({
   id: "pull-requests.tui",
   setup(context) {
+    const options = parseOptions(context.options);
     const indicatorColor = (health: Health) => {
       switch (health) {
         case "blocked":
@@ -56,7 +58,7 @@ export default Plugin.define({
       }
     };
     const [state, updateState] = context.storage.memory<PullRequestMemory>(
-      "pull-requests-v2",
+      `pull-requests-v2/${JSON.stringify(options.queries)}`,
       {
         initial: { value: { status: "loading", items: [] } },
       },
@@ -77,7 +79,7 @@ export default Plugin.define({
         items: state.value.items,
       });
       try {
-        const items = await fetchTracked();
+        const items = await fetchTracked(options.queries);
         const blocked = new Set(
           items
             .filter((i) => i.role === "authored" && i.health === "blocked")
@@ -130,7 +132,7 @@ export default Plugin.define({
       try {
         const session = await context.client.session.create({
           title: `PR ${pr.repository}#${pr.number}: ${kind}`,
-          model: { providerID: "github-copilot", id: "gpt-6-luna" },
+          model: options.model,
           ...(context.location ? { location: context.location } : {}),
         });
         await context.client.session.prompt({

@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process";
 import { Schema } from "effect";
 
+import { DEFAULT_OPTIONS, type SearchQueries } from "./config.ts";
 import { PullRequest, track, type TrackedPullRequest } from "./pull-request.ts";
 
 const QUERY = `
@@ -116,14 +117,15 @@ const search = async (query: string): Promise<ReadonlyArray<PullRequest>> => {
   return parsed.data.search.nodes.flatMap((node) => (node === null ? [] : [toPullRequest(node)]));
 };
 
-const BASE = "is:pr is:open archived:false sort:updated-desc";
-
 /** Open PRs awaiting my review (or assigned to me), then PRs I opened. A PR is listed once. */
-export const fetchTracked = async (): Promise<ReadonlyArray<TrackedPullRequest>> => {
+export const fetchTracked = async (
+  queries: SearchQueries = DEFAULT_OPTIONS.queries,
+  searchPullRequests: (query: string) => Promise<ReadonlyArray<PullRequest>> = search,
+): Promise<ReadonlyArray<TrackedPullRequest>> => {
   const [review, assigned, authored] = await Promise.all([
-    search(`${BASE} review-requested:@me`),
-    search(`${BASE} assignee:@me -author:@me`),
-    search(`${BASE} author:@me`),
+    searchPullRequests(queries.review),
+    searchPullRequests(queries.assigned),
+    searchPullRequests(queries.authored),
   ]);
   const seen = new Set<string>();
   const dedupe = (role: "review" | "authored", prs: ReadonlyArray<PullRequest>) =>
