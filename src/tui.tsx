@@ -5,7 +5,7 @@ import { execFile } from "node:child_process";
 import { fetchTracked } from "./github.ts";
 import { refreshThenShow } from "./list.ts";
 import { defaultKind, promptFor, type PromptKind } from "./prompts.ts";
-import { describeBlocker, type Health, type TrackedPullRequest } from "./pull-request.ts";
+import { describeBlocker, repositoryName, type Health, type TrackedPullRequest } from "./pull-request.ts";
 import { publishState, type PullRequestMemory } from "./state.ts";
 
 const REFRESH_MS = 2 * 60_000;
@@ -81,11 +81,10 @@ export default Plugin.define({
         await context.ui.dialog.alert({ title: "Could not load pull requests", message: state.value.message });
         return;
       }
-      context.ui.dialog.set({ size: "xlarge" });
-      const picked = await context.ui.dialog.select<TrackedPullRequest>({
+      const selection = context.ui.dialog.select<TrackedPullRequest>({
         title: summaryLine(state.value.items),
         options: state.value.items.map((tracked) => ({
-          title: `${ICON[tracked.health]} ${tracked.pullRequest.repository}#${tracked.pullRequest.number} ${tracked.pullRequest.title}`,
+          title: `${ICON[tracked.health]} ${repositoryName(tracked.pullRequest.repository)}#${tracked.pullRequest.number} ${tracked.pullRequest.title}`,
           description:
             tracked.blockers.map(describeBlocker).join(" · ") ||
             (tracked.role === "review" ? `by ${tracked.pullRequest.author}` : "ready"),
@@ -100,6 +99,8 @@ export default Plugin.define({
           { bind: "ctrl+o", title: "Open", onTrigger: (v) => openUrl(v.pullRequest.url) },
         ],
       });
+      context.ui.dialog.set({ size: "xlarge" });
+      const picked = await selection;
       if (picked !== undefined) await startSession(defaultKind(picked), picked);
     });
 

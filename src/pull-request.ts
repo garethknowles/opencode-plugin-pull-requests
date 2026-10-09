@@ -77,6 +77,9 @@ export const describeBlocker = (blocker: Blocker): string => {
 
 export type Role = "review" | "authored";
 
+/** Compact display only; repository identity always retains owner/name. */
+export const repositoryName = (repository: string): string => repository.split("/").at(-1) ?? repository;
+
 export interface TrackedPullRequest {
   readonly role: Role;
   readonly pullRequest: PullRequest;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { defaultKind } from "./prompts.ts";
-import { track, type PullRequest } from "./pull-request.ts";
+import { repositoryName, track, type PullRequest } from "./pull-request.ts";
 
 const base: PullRequest = {
   repository: "o/r",
@@ -16,6 +16,11 @@ const base: PullRequest = {
   unresolvedThreads: 0,
   checks: [],
 };
+
+it("displays the repository without its owner", () => {
+  expect(repositoryName("eeveebank/graphql-server")).toBe("graphql-server");
+  expect(repositoryName("graphql-server")).toBe("graphql-server");
+});
 
 describe("track", () => {
   it("is ready when nothing blocks", () => {
