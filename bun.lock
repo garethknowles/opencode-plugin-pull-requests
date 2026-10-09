@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "@boxed/opencode-pull-requests",
+      "name": "opencode-pull-requests",
       "dependencies": {
         "@opencode/plugin": "2.0.26",
         "effect": "4.0.0-rc.112",

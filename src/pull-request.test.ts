@@ -18,8 +18,8 @@ const base: PullRequest = {
 };
 
 it("displays the repository without its owner", () => {
-  expect(repositoryName("eeveebank/graphql-server")).toBe("graphql-server");
-  expect(repositoryName("graphql-server")).toBe("graphql-server");
+  expect(repositoryName("example/api-service")).toBe("api-service");
+  expect(repositoryName("api-service")).toBe("api-service");
 });
 
 it("limits sidebar previews, prioritizes blockers and keeps roles separate", () => {

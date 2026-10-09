@@ -30,7 +30,7 @@ const summaryLine = (items: ReadonlyArray<TrackedPullRequest>): string => {
 
 /** Tracks PRs awaiting my review or opened by me, with one-key follow-up sessions. */
 export default Plugin.define({
-  id: "boxed.pull-requests.tui",
+  id: "pull-requests.tui",
   setup(context) {
     const indicatorColor = (health: Health) => {
       switch (health) {
@@ -133,7 +133,7 @@ export default Plugin.define({
       mode: "global",
       commands: [
         {
-          id: "boxed.pull-requests.list",
+          id: "pull-requests.list",
           title: "Pull requests",
           group: "GitHub",
           palette: true,
@@ -141,7 +141,7 @@ export default Plugin.define({
           run: () => void showList(),
         },
         {
-          id: "boxed.pull-requests.refresh",
+          id: "pull-requests.refresh",
           title: "Refresh pull requests",
           group: "GitHub",
           palette: true,

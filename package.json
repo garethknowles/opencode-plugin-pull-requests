@@ -1,5 +1,5 @@
 {
-  "name": "@boxed/opencode-pull-requests",
+  "name": "opencode-pull-requests",
   "version": "0.0.0",
   "description": "Track GitHub pull requests awaiting your review or opened by you",
   "type": "module",
