@@ -4,11 +4,12 @@ OpenCode v2 plugin tracking GitHub PRs awaiting your review or opened by you.
 
 - Polls every 2 min via `gh` (must be authenticated).
 - Footer status: `PRs 3 to review · 5 mine · 2 blocked`.
-- Session sidebar: counts and up to three PRs per group, blocked first. Click to open the full list.
+- Session sidebar: counts and up to three PRs per group, blocked first. Click a PR to open the full list with it selected.
 - Toast when one of your PRs becomes newly blocked.
 - `/prs` (or palette "Pull requests") lists PRs with blockers: failing checks, conflicts, changes requested, unresolved threads, draft.
+- Opens cached results immediately, shows `loading…`, and updates in place as the background refresh finishes.
 - In the list: `enter` default action, `ctrl+f` fix, `ctrl+e` explain, `ctrl+s` summarize, `ctrl+r` review, `ctrl+o` open in browser.
-  Each action starts a new session in the current directory with a PR-specific prompt.
+  Each action starts a new session in the current directory with a PR-specific prompt, using `github-copilot/gpt-6-luna`.
 
 ## Install
 

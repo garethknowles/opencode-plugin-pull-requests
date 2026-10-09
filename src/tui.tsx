@@ -4,7 +4,7 @@ import { execFile } from "node:child_process";
 import { For, Show } from "solid-js";
 
 import { fetchTracked } from "./github.ts";
-import { refreshThenShow } from "./list.ts";
+import { refreshAndShow } from "./list.ts";
 import { defaultKind, promptFor, type PromptKind } from "./prompts.ts";
 import { describeBlocker, repositoryName, sidebarItems, type Health, type Role, type TrackedPullRequest } from "./pull-request.ts";
 import { publishState, type PullRequestMemory } from "./state.ts";
@@ -42,7 +42,8 @@ export default Plugin.define({
     let previouslyBlocked = new Set<string>();
     let firstLoad = true;
 
-    const refresh = async (): Promise<void> => {
+    const load = async (): Promise<void> => {
+      publishState(updateState, { status: "loading", items: state.value.items });
       try {
         const items = await fetchTracked();
         const blocked = new Set(items.filter((i) => i.role === "authored" && i.health === "blocked").map(key));
@@ -60,7 +61,17 @@ export default Plugin.define({
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         publishState(updateState, { status: "error", items: state.value.items, message });
+        context.ui.toast.show({ title: "Could not refresh PRs", message, variant: "error" });
       }
+    };
+
+    let refreshing: Promise<void> | undefined;
+    const refresh = (): Promise<void> => {
+      if (refreshing !== undefined) return refreshing;
+      refreshing = load().finally(() => {
+        refreshing = undefined;
+      });
+      return refreshing;
     };
 
     const startSession = async (kind: PromptKind, tracked: TrackedPullRequest): Promise<void> => {
@@ -68,6 +79,7 @@ export default Plugin.define({
       try {
         const session = await context.client.session.create({
           title: `PR ${pr.repository}#${pr.number}: ${kind}`,
+          model: { providerID: "github-copilot", id: "gpt-6-luna" },
           ...(context.location ? { location: context.location } : {}),
         });
         await context.client.session.prompt({ sessionID: session.id, text: promptFor(kind, tracked) });
@@ -81,21 +93,23 @@ export default Plugin.define({
       }
     };
 
-    const showList = (): Promise<void> => refreshThenShow(refresh, async () => {
-      if (state.value.status === "error") {
-        await context.ui.dialog.alert({ title: "Could not load pull requests", message: state.value.message });
-        return;
-      }
+    const showList = (selected?: TrackedPullRequest): Promise<void> => refreshAndShow(refresh, async () => {
       const selection = context.ui.dialog.select<TrackedPullRequest>({
-        title: summaryLine(state.value.items),
-        options: state.value.items.map((tracked) => ({
-          title: `${ICON[tracked.health]} ${repositoryName(tracked.pullRequest.repository)}#${tracked.pullRequest.number} ${tracked.pullRequest.title}`,
-          description:
-            tracked.blockers.map(describeBlocker).join(" · ") ||
-            (tracked.role === "review" ? `by ${tracked.pullRequest.author}` : "ready"),
-          value: tracked,
-          category: tracked.role === "review" ? "Awaiting my review" : "Opened by me",
-        })),
+        ...(selected === undefined ? {} : { current: selected }),
+        get title() {
+          const suffix = state.value.status === "loading" ? " · loading…" : state.value.status === "error" ? " · refresh failed" : "";
+          return `${summaryLine(state.value.items)}${suffix}`;
+        },
+        get options() {
+          return state.value.items.map((tracked) => ({
+            title: `${ICON[tracked.health]} ${repositoryName(tracked.pullRequest.repository)}#${tracked.pullRequest.number} ${tracked.pullRequest.title}`,
+            description:
+              tracked.blockers.map(describeBlocker).join(" · ") ||
+              (tracked.role === "review" ? `by ${tracked.pullRequest.author}` : "ready"),
+            value: tracked,
+            category: tracked.role === "review" ? "Awaiting my review" : "Opened by me",
+          }));
+        },
         actions: [
           { bind: "ctrl+f", title: "Fix", onTrigger: (v) => void startSession("fix", v) },
           { bind: "ctrl+e", title: "Explain", onTrigger: (v) => void startSession("investigate", v) },
@@ -149,7 +163,7 @@ export default Plugin.define({
             <b>{sidebar.expanded ? "▼" : "▶"} Pull requests</b>
           </text>
           <Show when={sidebar.expanded}>
-          <Show when={state.value.status === "ready"} fallback={
+          <Show when={state.value.status === "ready" || state.value.items.length > 0} fallback={
             <text fg={context.theme.text.muted} onMouseUp={() => void showList()}>
               {state.value.status === "error" ? "Unavailable · click to retry" : "Loading…"}
             </text>
@@ -162,7 +176,7 @@ export default Plugin.define({
                   </text>
                   <For each={sidebarItems(state.value.items, role)}>
                     {(item) => (
-                      <text fg={context.theme.text.base} truncate wrapMode="none" onMouseUp={() => void showList()}>
+                      <text fg={context.theme.text.base} truncate wrapMode="none" onMouseUp={() => void showList(item)}>
                         {ICON[item.health]} {repositoryName(item.pullRequest.repository)}#{item.pullRequest.number}
                       </text>
                     )}

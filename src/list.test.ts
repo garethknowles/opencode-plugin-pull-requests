@@ -1,17 +1,18 @@
 import { expect, it } from "vitest";
-import { refreshThenShow } from "./list.ts";
+import { refreshAndShow } from "./list.ts";
 
-it("waits for fetched PRs before opening the dialog", async () => {
-  let items: string[] = [];
-  let shown: string[] = [];
-  await refreshThenShow(
+it("opens cached PRs before the refresh finishes", async () => {
+  const events: string[] = [];
+  let items = ["cached/repo#1"];
+  await refreshAndShow(
     async () => {
       await Promise.resolve();
-      items = ["owner/repo#1"];
+      items = ["fresh/repo#2"];
+      events.push("loaded");
     },
     async () => {
-      shown = [...items];
+      events.push(`shown: ${items.join(",")}`);
     },
   );
-  expect(shown).toEqual(["owner/repo#1"]);
+  expect(events).toEqual(["shown: cached/repo#1", "loaded"]);
 });
