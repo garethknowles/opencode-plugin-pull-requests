@@ -16,9 +16,11 @@ An OpenCode v2 terminal plugin. Uses your existing GitHub CLI authentication; no
 ## Screenshots
 
 ### PR list
+
 ![PR list with status indicators, aligned reasons and default actions](docs/screenshots/prs-list.png)
 
 ### Session sidebar
+
 ![Collapsible Pull requests sidebar with review and authored groups](docs/screenshots/sidebar.png)
 
 Repository names and PR numbers are fictional examples. PR titles and detailed blocker text are masked; unrelated background and sidebar content are cropped out.
@@ -45,7 +47,7 @@ Run `bun install` in this repository. Its `opencode.jsonc` enables the plugin lo
 ```jsonc
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugins": ["./"]
+  "plugins": ["./"],
 }
 ```
 
@@ -86,12 +88,12 @@ Use the search field to filter the list. Long titles are truncated with `…`. T
 
 ### Status indicators
 
-| Indicator | State | Meaning |
-| --- | --- | --- |
-| ❌ | Blocked | Failing checks, merge conflicts, changes requested, or unresolved review threads |
-| ⏳ | Pending | Checks running, review required, or draft status |
-| ✅ | No detected blockers | None of the tracked blockers are present |
-| 📝 | Draft | A second icon, independent of the overall status |
+| Indicator | State                | Meaning                                                                          |
+| --------- | -------------------- | -------------------------------------------------------------------------------- |
+| ❌        | Blocked              | Failing checks, merge conflicts, changes requested, or unresolved review threads |
+| ⏳        | Pending              | Checks running, review required, or draft status                                 |
+| ✅        | No detected blockers | None of the tracked blockers are present                                         |
+| 📝        | Draft                | A second icon, independent of the overall status                                 |
 
 Draft alone is pending, not blocked. A draft with failing checks or other actionable blockers remains red:
 
@@ -107,14 +109,14 @@ Non-draft rows reserve the draft icon's space so names align. The picker uses co
 
 ### Actions
 
-| Shortcut | Action | What the new session is asked to do |
-| --- | --- | --- |
-| `Enter` | Default | Review someone else's PR; fix your blocked PR; otherwise summarize |
-| `Ctrl+F` | Fix | Inspect failures, review threads and conflicts; make minimal fixes, test and push |
-| `Ctrl+E` | Explain | Investigate blockers and recommend next steps without changing code |
-| `Ctrl+S` | Summarize | Explain intent, changes, risks and discussion without changing code |
-| `Ctrl+R` | Review | Inspect correctness, tests, security and maintainability; report findings |
-| `Ctrl+O` | Open | Open the PR in your browser; no session is created |
+| Shortcut | Action    | What the new session is asked to do                                               |
+| -------- | --------- | --------------------------------------------------------------------------------- |
+| `Enter`  | Default   | Review someone else's PR; fix your blocked PR; otherwise summarize                |
+| `Ctrl+F` | Fix       | Inspect failures, review threads and conflicts; make minimal fixes, test and push |
+| `Ctrl+E` | Explain   | Investigate blockers and recommend next steps without changing code               |
+| `Ctrl+S` | Summarize | Explain intent, changes, risks and discussion without changing code               |
+| `Ctrl+R` | Review    | Inspect correctness, tests, security and maintainability; report findings         |
+| `Ctrl+O` | Open      | Open the PR in your browser; no session is created                                |
 
 Explicit actions override the default. Draft-only PRs default to **Summarize**, not Fix. You can also click the footer actions.
 
@@ -152,7 +154,7 @@ The blocked count covers **your authored PRs**, not the review queue. Loading an
 
 ## Refresh and notifications
 
-- Fetches on plugin startup, every **two minutes**, and when `/prs` opens.
+- Fetches on plugin startup, every **five minutes**, and when `/prs` opens.
 - **Refresh pull requests** in the command palette triggers a manual refresh.
 - Opening the list shows cached results immediately with **loading…**; results update in place as the refresh finishes.
 - Concurrent refreshes share one request. Cached results remain visible if refreshing fails; the list shows **refresh failed** and an error toast.
