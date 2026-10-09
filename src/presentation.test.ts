@@ -1,5 +1,6 @@
 import { expect, it } from "vitest";
-import { defaultActionLabel, HEALTH_INDICATORS, pullRequestLabel, statusDescription } from "./presentation.ts";
+import { defaultActionLabel, HEALTH_INDICATORS, panelTitle, pullRequestLabel, statusDescription } from "./presentation.ts";
+import stringWidth from "string-width";
 import { track, type PullRequest } from "./pull-request.ts";
 
 const pr: PullRequest = {
@@ -39,4 +40,16 @@ it("keeps real blockers red on draft PRs", () => {
   expect(pullRequestLabel(draft.pullRequest)).toBe("📝 repo#1");
   expect(statusDescription(draft)).toBe("Blocked: draft · failing: test");
   expect(defaultActionLabel(draft)).toBe("↵ Fix");
+});
+
+it("aligns reasoning after short, long, draft and wide-character titles", () => {
+  const titles = ["Short", "A long description ".repeat(10), "更新 ✅", "Fix e\u0301", "e\u0301".repeat(60)];
+  for (const title of titles) {
+    for (const isDraft of [false, true]) {
+      const formatted = panelTitle(track("authored", { ...pr, title, isDraft }));
+      expect(stringWidth(formatted)).toBe(56);
+      expect(formatted.length).toBeLessThanOrEqual(61);
+    }
+  }
+  expect(panelTitle(track("authored", { ...pr, title: "x".repeat(100) })).trimEnd()).toMatch(/…$/);
 });

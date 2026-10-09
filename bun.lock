@@ -7,6 +7,7 @@
       "dependencies": {
         "@opencode/plugin": "2.0.26",
         "effect": "4.0.0-rc.112",
+        "string-width": "7.2.0",
       },
       "devDependencies": {
         "@opentui/core": "0.5.11",

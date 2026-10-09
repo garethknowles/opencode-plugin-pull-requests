@@ -6,7 +6,7 @@ import { For, Show } from "solid-js";
 import { fetchTracked } from "./github.ts";
 import { refreshAndShow } from "./list.ts";
 import { defaultKind, promptFor, type PromptKind } from "./prompts.ts";
-import { defaultActionLabel, HEALTH_INDICATORS, pullRequestLabel, statusDescription } from "./presentation.ts";
+import { defaultActionLabel, HEALTH_INDICATORS, panelTitle, pullRequestLabel, statusDescription } from "./presentation.ts";
 import { describeBlocker, sidebarItems, type Health, type Role, type TrackedPullRequest } from "./pull-request.ts";
 import { publishState, type PullRequestMemory } from "./state.ts";
 
@@ -109,7 +109,7 @@ export default Plugin.define({
         },
         get options() {
           return state.value.items.map((tracked) => ({
-            title: `${HEALTH_INDICATORS[tracked.health].icon} ${pullRequestLabel(tracked.pullRequest)} ${tracked.pullRequest.title}`,
+            title: panelTitle(tracked),
             description: statusDescription(tracked),
             footer: defaultActionLabel(tracked),
             value: tracked,

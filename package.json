@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@opencode/plugin": "2.0.26",
-    "effect": "4.0.0-rc.112"
+    "effect": "4.0.0-rc.112",
+    "string-width": "7.2.0"
   },
   "peerDependencies": {
     "@opentui/core": ">=0.5.8",
