@@ -1,0 +1,32 @@
+{
+  "name": "@boxed/opencode-pull-requests",
+  "version": "0.0.0",
+  "description": "Track GitHub pull requests awaiting your review or opened by you",
+  "type": "module",
+  "files": ["src", "index.ts", "tui.tsx", "README.md"],
+  "exports": {
+    ".": "./src/index.ts",
+    "./tui": "./src/tui.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@opencode/plugin": "2.0.26",
+    "effect": "4.0.0-rc.112"
+  },
+  "peerDependencies": {
+    "@opentui/core": ">=0.5.8",
+    "@opentui/solid": ">=0.5.8",
+    "solid-js": ">=1.9.0"
+  },
+  "devDependencies": {
+    "@opentui/core": "0.5.11",
+    "@opentui/solid": "0.5.11",
+    "@types/node": "25.6.0",
+    "solid-js": "^1.9.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.0.0"
+  }
+}
