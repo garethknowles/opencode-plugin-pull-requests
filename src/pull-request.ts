@@ -52,7 +52,7 @@ export const blockersOf = (pr: PullRequest): ReadonlyArray<Blocker> => {
 };
 
 export const healthOf = (blockers: ReadonlyArray<Blocker>): Health => {
-  if (blockers.some((b) => b._tag !== "ChecksPending" && b._tag !== "ReviewRequired")) return "blocked";
+  if (blockers.some((b) => b._tag !== "ChecksPending" && b._tag !== "ReviewRequired" && b._tag !== "Draft")) return "blocked";
   return blockers.length > 0 ? "pending" : "ready";
 };
 

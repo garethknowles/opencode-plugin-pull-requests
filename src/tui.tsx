@@ -6,12 +6,12 @@ import { For, Show } from "solid-js";
 import { fetchTracked } from "./github.ts";
 import { refreshAndShow } from "./list.ts";
 import { defaultKind, promptFor, type PromptKind } from "./prompts.ts";
-import { describeBlocker, repositoryName, sidebarItems, type Health, type Role, type TrackedPullRequest } from "./pull-request.ts";
+import { defaultActionLabel, HEALTH_INDICATORS, pullRequestLabel, statusDescription } from "./presentation.ts";
+import { describeBlocker, sidebarItems, type Health, type Role, type TrackedPullRequest } from "./pull-request.ts";
 import { publishState, type PullRequestMemory } from "./state.ts";
 
 const REFRESH_MS = 2 * 60_000;
 
-const ICON: Record<Health, string> = { blocked: "✗", pending: "◌", ready: "✓" };
 const SIDEBAR_ROLES: ReadonlyArray<Role> = ["review", "authored"];
 
 const key = ({ pullRequest: pr }: TrackedPullRequest) => `${pr.repository}#${pr.number}`;
@@ -32,6 +32,13 @@ const summaryLine = (items: ReadonlyArray<TrackedPullRequest>): string => {
 export default Plugin.define({
   id: "boxed.pull-requests.tui",
   setup(context) {
+    const indicatorColor = (health: Health) => {
+      switch (health) {
+        case "blocked": return context.theme.text.feedback.error.base;
+        case "pending": return "#facc15";
+        case "ready": return context.theme.text.feedback.success.base;
+      }
+    };
     const [state, updateState] = context.storage.memory<PullRequestMemory>("pull-requests-v2", {
       initial: { value: { status: "loading", items: [] } },
     });
@@ -102,10 +109,9 @@ export default Plugin.define({
         },
         get options() {
           return state.value.items.map((tracked) => ({
-            title: `${ICON[tracked.health]} ${repositoryName(tracked.pullRequest.repository)}#${tracked.pullRequest.number} ${tracked.pullRequest.title}`,
-            description:
-              tracked.blockers.map(describeBlocker).join(" · ") ||
-              (tracked.role === "review" ? `by ${tracked.pullRequest.author}` : "ready"),
+            title: `${HEALTH_INDICATORS[tracked.health].icon} ${pullRequestLabel(tracked.pullRequest)} ${tracked.pullRequest.title}`,
+            description: statusDescription(tracked),
+            footer: defaultActionLabel(tracked),
             value: tracked,
             category: tracked.role === "review" ? "Awaiting my review" : "Opened by me",
           }));
@@ -177,7 +183,7 @@ export default Plugin.define({
                   <For each={sidebarItems(state.value.items, role)}>
                     {(item) => (
                       <text fg={context.theme.text.base} truncate wrapMode="none" onMouseUp={() => void showList(item)}>
-                        {ICON[item.health]} {repositoryName(item.pullRequest.repository)}#{item.pullRequest.number}
+                        <span style={{ fg: indicatorColor(item.health) }}>{HEALTH_INDICATORS[item.health].icon}</span> {pullRequestLabel(item.pullRequest)}
                       </text>
                     )}
                   </For>
