@@ -87,6 +87,12 @@ export interface TrackedPullRequest {
   readonly health: Health;
 }
 
+/** Bound sidebar height while surfacing actionable PRs first. Stable ties retain GitHub's recency order. */
+export const sidebarItems = (items: ReadonlyArray<TrackedPullRequest>, role: Role): ReadonlyArray<TrackedPullRequest> => {
+  const priority: Record<Health, number> = { blocked: 0, pending: 1, ready: 2 };
+  return items.filter((item) => item.role === role).sort((a, b) => priority[a.health] - priority[b.health]).slice(0, 3);
+};
+
 export const track = (role: Role, pullRequest: PullRequest): TrackedPullRequest => {
   const blockers = blockersOf(pullRequest);
   return { role, pullRequest, blockers, health: healthOf(blockers) };

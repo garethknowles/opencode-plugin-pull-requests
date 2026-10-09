@@ -1,16 +1,18 @@
 /** @jsxImportSource @opentui/solid */
 import { Plugin } from "@opencode/plugin/tui";
 import { execFile } from "node:child_process";
+import { For, Show } from "solid-js";
 
 import { fetchTracked } from "./github.ts";
 import { refreshThenShow } from "./list.ts";
 import { defaultKind, promptFor, type PromptKind } from "./prompts.ts";
-import { describeBlocker, repositoryName, type Health, type TrackedPullRequest } from "./pull-request.ts";
+import { describeBlocker, repositoryName, sidebarItems, type Health, type Role, type TrackedPullRequest } from "./pull-request.ts";
 import { publishState, type PullRequestMemory } from "./state.ts";
 
 const REFRESH_MS = 2 * 60_000;
 
 const ICON: Record<Health, string> = { blocked: "✗", pending: "◌", ready: "✓" };
+const SIDEBAR_ROLES: ReadonlyArray<Role> = ["review", "authored"];
 
 const key = ({ pullRequest: pr }: TrackedPullRequest) => `${pr.repository}#${pr.number}`;
 
@@ -32,6 +34,9 @@ export default Plugin.define({
   setup(context) {
     const [state, updateState] = context.storage.memory<PullRequestMemory>("pull-requests-v2", {
       initial: { value: { status: "loading", items: [] } },
+    });
+    const [sidebar, updateSidebar] = context.storage.memory("pull-requests-sidebar", {
+      initial: { expanded: true },
     });
 
     let previouslyBlocked = new Set<string>();
@@ -134,11 +139,50 @@ export default Plugin.define({
       ),
     });
 
+    const disposeSidebar = context.ui.slot({
+      append: "sidebar.content",
+      render: () => (
+        <box gap={1}>
+          <text fg={context.theme.text.base} onMouseUp={() => updateSidebar((draft) => {
+            draft.expanded = !draft.expanded;
+          })}>
+            <b>{sidebar.expanded ? "▼" : "▶"} Pull requests</b>
+          </text>
+          <Show when={sidebar.expanded}>
+          <Show when={state.value.status === "ready"} fallback={
+            <text fg={context.theme.text.muted} onMouseUp={() => void showList()}>
+              {state.value.status === "error" ? "Unavailable · click to retry" : "Loading…"}
+            </text>
+          }>
+            <For each={SIDEBAR_ROLES}>
+              {(role) => (
+                <box>
+                  <text fg={context.theme.text.muted} onMouseUp={() => void showList()}>
+                    {role === "review" ? "To review" : "Opened by me"} ({state.value.items.filter((i) => i.role === role).length})
+                  </text>
+                  <For each={sidebarItems(state.value.items, role)}>
+                    {(item) => (
+                      <text fg={context.theme.text.base} truncate wrapMode="none" onMouseUp={() => void showList()}>
+                        {ICON[item.health]} {repositoryName(item.pullRequest.repository)}#{item.pullRequest.number}
+                      </text>
+                    )}
+                  </For>
+                </box>
+              )}
+            </For>
+            <text fg={context.theme.text.muted} onMouseUp={() => void showList()}>View all · /prs</text>
+          </Show>
+          </Show>
+        </box>
+      ),
+    });
+
     void refresh();
     const timer = setInterval(() => void refresh(), REFRESH_MS);
     return () => {
       clearInterval(timer);
       dispose();
+      disposeSidebar();
     };
   },
 });

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { defaultKind } from "./prompts.ts";
-import { repositoryName, track, type PullRequest } from "./pull-request.ts";
+import { repositoryName, sidebarItems, track, type PullRequest } from "./pull-request.ts";
 
 const base: PullRequest = {
   repository: "o/r",
@@ -20,6 +20,17 @@ const base: PullRequest = {
 it("displays the repository without its owner", () => {
   expect(repositoryName("eeveebank/graphql-server")).toBe("graphql-server");
   expect(repositoryName("graphql-server")).toBe("graphql-server");
+});
+
+it("limits sidebar previews, prioritizes blockers and keeps roles separate", () => {
+  const ready = track("authored", base);
+  const blocked = track("authored", { ...base, number: 2, mergeable: "CONFLICTING" });
+  const pending = track("authored", { ...base, number: 3, reviewDecision: "REVIEW_REQUIRED" });
+  const review = track("review", base);
+  const items = [ready, blocked, pending, ready, review];
+  expect(sidebarItems(items, "authored")).toEqual([blocked, pending, ready]);
+  expect(sidebarItems(items, "review")).toEqual([review]);
+  expect(items[0]).toBe(ready);
 });
 
 describe("track", () => {
